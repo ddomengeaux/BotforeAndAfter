@@ -511,3 +511,6 @@ MigrationBackup/
 .ionide/
 
 # End of https://www.toptal.com/developers/gitignore/api/rider,macos,visualstudio,xamarinstudio,visualstudiocode,xcode
+
+**/config.json
+.idea/
