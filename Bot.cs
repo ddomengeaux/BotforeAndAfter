@@ -10,6 +10,7 @@ using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
 using LiteDB;
+using Microsoft.Bing.ImageSearch;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -72,6 +73,7 @@ namespace BotforeAndAfters
                 }))
                 .AddSingleton(new LiteDatabase($"{Constants.CONFIG_BOT_NAME}.db"))
                 .AddSingleton<GameService>()
+                .AddSingleton(new ImageSearchClient(new ApiKeyServiceClientCredentials(_config[Keys.BING_KEY])))
                 .BuildServiceProvider();
 
             Client.Log += OnLog;

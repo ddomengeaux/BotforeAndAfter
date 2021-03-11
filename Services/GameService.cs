@@ -111,8 +111,6 @@ namespace BotforeAndAfters.Services
 
         public Tuple<bool, TimeSpan> CheckForCooldown(ulong user)
         {
-            return new Tuple<bool, TimeSpan>(false, TimeSpan.Zero);
-
             var latest = Games.Query().Where(x => x.StartedBy == user).OrderByDescending(x => x.StartedOn)
                 .FirstOrDefault();
 
