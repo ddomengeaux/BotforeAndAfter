@@ -4,10 +4,12 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using BotforeAndAfters.Extensions;
+using BotforeAndAfters.Services;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using LiteDB;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
@@ -55,6 +57,7 @@ namespace BotforeAndAfters
             });
 
             Services = new ServiceCollection()
+                .AddSingleton(_config)
                 .AddSingleton(Logger)
                 .AddSingleton(Client)
                 .AddSingleton(new InteractiveService(Client, new InteractiveServiceConfig
@@ -67,7 +70,8 @@ namespace BotforeAndAfters
                     IgnoreExtraArgs = false,
                     LogLevel = LogSeverity.Verbose
                 }))
-                .SetupGoogleSheets(_config, Logger).Result
+                .AddSingleton(new LiteDatabase($"{Constants.CONFIG_BOT_NAME}.db"))
+                .AddSingleton<GameService>()
                 .BuildServiceProvider();
 
             Client.Log += OnLog;
@@ -130,7 +134,8 @@ namespace BotforeAndAfters
                             break;
                     }
 
-                    await context.Channel.SendMessageAsync(result.ErrorReason);
+                    if (!result.ErrorReason.Equals("Unknown command."))
+                        await context.Channel.SendMessageAsync(result.ErrorReason);
                 };
             };
 

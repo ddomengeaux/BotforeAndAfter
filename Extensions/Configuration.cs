@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BotforeAndAfters.Services;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Services;
 using Google.Apis.Sheets.v4;
@@ -24,17 +25,17 @@ namespace BotforeAndAfters.Extensions
             return loggerConfiguration;
         }
 
-        public static async Task<IServiceCollection> SetupGoogleSheets(this IServiceCollection services, IConfiguration configuration, ILogger logger)
+        public static async Task<SheetsService> SetupGoogleSheets(IConfiguration configuration, ILogger logger)
         {
             if (string.IsNullOrEmpty(configuration[Keys.SHEETS_CLIENT_ID_KEY]))
             {
                 logger.Warning("No google sheets auth config found. Before and Afters will be disabled");
-                return services;
+                return null;
             }
 
             try
             {
-                return services.AddSingleton(new SheetsService(new BaseClientService.Initializer
+                return new SheetsService(new BaseClientService.Initializer
                 {
                     HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync(
                         new ClientSecrets
@@ -47,12 +48,12 @@ namespace BotforeAndAfters.Extensions
                         CancellationToken.None,
                         new FileDataStore("token", true)),
                     ApplicationName = Constants.CONFIG_BOT_NAME
-                }));
+                });
             }
             catch (Exception ex)
             {
                 logger.Warning(ex, "Unable to authenticate with google sheets. Before and Afters will be disabled");
-                return services;
+                return null;
             }
         }
     }
