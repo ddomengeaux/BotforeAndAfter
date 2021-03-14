@@ -1,104 +1,104 @@
-//using System;
-//using System.Linq;
-//using System.Threading.Tasks;
-//using Discord;
-//using Discord.Commands;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Discord;
+using Discord.Commands;
 
-//namespace BotforeAndAfters.Commands
-//{
-//    [Group("role")]
-//    public class RolesModule : ModuleBase<SocketCommandContext>
-//    {
-//        [Command("add")]
-//        [Summary("Add a new role to the server.")]
-//        public async Task Add(string roleName)
-//        {
-//            if (Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName)) == null)
-//            {
-//                var role = await Context.Guild.CreateRoleAsync(roleName, GuildPermissions.None, null, false, false);
-//                if (role != null)
-//                    await Context.Channel.SendMessageAsync($"Role {roleName} created");
-//                return;
-//            }
+namespace BotforeAndAfters.Commands
+{
+    [Group("role")]
+    public class RolesModule : ModuleBase<SocketCommandContext>
+    {
+        [Command("add")]
+        [Summary("Add a new role to the server.")]
+        public async Task Add(string roleName)
+        {
+            if (Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName)) == null)
+            {
+                var role = await Context.Guild.CreateRoleAsync(roleName, GuildPermissions.None, null, false, false);
+                if (role != null)
+                    await Context.Channel.SendMessageAsync($"Role {roleName} created");
+                return;
+            }
 
-//            await Context.Channel.SendMessageAsync($"Role {roleName} already exists");
-//        }
-        
-//        [Command("delete")]
-//        [Summary("Delete a new role to the server.")]
-//        public async Task Delete(string roleName)
-//        {
-//            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName));
+            await Context.Channel.SendMessageAsync($"Role {roleName} already exists");
+        }
 
-//            if (role == null)
-//            {
-//                await Context.Channel.SendMessageAsync($"Role {roleName} does not exist");
-//                return;
-//            }
+        [Command("delete")]
+        [Summary("Delete a new role to the server.")]
+        public async Task Delete(string roleName)
+        {
+            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName));
 
-//            await role.DeleteAsync();
-//            await Context.Channel.SendMessageAsync($"Role {roleName} deleted");
-//        }
+            if (role == null)
+            {
+                await Context.Channel.SendMessageAsync($"Role {roleName} does not exist");
+                return;
+            }
 
-//        [Command("list")]
-//        [Summary("Lists available roles")]
-//        public async Task List()
-//        {
-//            var eb = new EmbedBuilder();
-//            eb.WithDescription("Roles:");
+            await role.DeleteAsync();
+            await Context.Channel.SendMessageAsync($"Role {roleName} deleted");
+        }
 
-//            foreach (var role in Context.Guild.Roles.Where(x => !x.IsEveryone && !x.IsHoisted))
-//            {
-//                eb.AddField(role.Name, role.Mention, true);
-//            }
-            
-//            await Context.Channel.SendMessageAsync(string.Empty, false, eb.Build());
-//        }
+        [Command("list")]
+        [Summary("Lists available roles")]
+        public async Task List()
+        {
+            var eb = new EmbedBuilder();
+            eb.WithDescription("Roles:");
 
-//        [Command("join")]
-//        [Summary("Join a requested role")]
-//        public async Task Join(string roleName)
-//        {
-//            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName));
+            foreach (var role in Context.Guild.Roles.Where(x => !x.IsEveryone && !x.IsHoisted))
+            {
+                eb.AddField(role.Name, role.Mention, true);
+            }
 
-//            if (role == null)
-//            {
-//                await Context.Channel.SendMessageAsync($"Role {roleName} does not exist");
-//                return;
-//            }
+            await Context.Channel.SendMessageAsync(string.Empty, false, eb.Build());
+        }
 
-//            try
-//            {
-//                await ((IGuildUser) Context.User).AddRoleAsync(role);
-//                await Context.Channel.SendMessageAsync($"{Context.User.Username} joined {role.Name}");
-//            }
-//            catch (Exception e)
-//            {
-//                await Context.Channel.SendMessageAsync($"Unable to join role: {e.Message}");
-//            }
-//        }
-        
-//        [Command("leave")]
-//        [Summary("Leave a requested role")]
-//        public async Task Leave(string roleName)
-//        {
-//            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName));
+        [Command("join")]
+        [Summary("Join a requested role")]
+        public async Task Join(string roleName)
+        {
+            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName));
 
-//            if (role == null)
-//            {
-//                await Context.Channel.SendMessageAsync($"Role {roleName} does not exist");
-//                return;
-//            }
+            if (role == null)
+            {
+                await Context.Channel.SendMessageAsync($"Role {roleName} does not exist");
+                return;
+            }
 
-//            try
-//            {
-//                await ((IGuildUser) Context.User).RemoveRoleAsync(role);
-//                await Context.Channel.SendMessageAsync($"{Context.User.Username} left {role.Name}");
-//            }
-//            catch (Exception e)
-//            {
-//                await Context.Channel.SendMessageAsync($"Unable to leave role: {e.Message}");
-//            }
-//        }
-//    }
-//}
+            try
+            {
+                await ((IGuildUser)Context.User).AddRoleAsync(role);
+                await Context.Channel.SendMessageAsync($"{Context.User.Username} joined {role.Name}");
+            }
+            catch (Exception e)
+            {
+                await Context.Channel.SendMessageAsync($"Unable to join role: {e.Message}");
+            }
+        }
+
+        [Command("leave")]
+        [Summary("Leave a requested role")]
+        public async Task Leave(string roleName)
+        {
+            var role = Context.Guild.Roles.FirstOrDefault(x => x.Name.Equals(roleName));
+
+            if (role == null)
+            {
+                await Context.Channel.SendMessageAsync($"Role {roleName} does not exist");
+                return;
+            }
+
+            try
+            {
+                await ((IGuildUser)Context.User).RemoveRoleAsync(role);
+                await Context.Channel.SendMessageAsync($"{Context.User.Username} left {role.Name}");
+            }
+            catch (Exception e)
+            {
+                await Context.Channel.SendMessageAsync($"Unable to leave role: {e.Message}");
+            }
+        }
+    }
+}

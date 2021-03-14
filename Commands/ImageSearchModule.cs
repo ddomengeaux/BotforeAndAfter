@@ -8,11 +8,11 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace BotforeAndAfters.Commands
 {
-    public class MankModule : ModuleBase<SocketCommandContext>
+    public class ImageSearchModule : ModuleBase<SocketCommandContext>
     {
         private readonly ImageSearchClient _client;
 
-        public MankModule(IServiceProvider services)
+        public ImageSearchModule(IServiceProvider services)
         {
             _client = services.GetService<ImageSearchClient>();
         }
@@ -22,6 +22,17 @@ namespace BotforeAndAfters.Commands
         public async Task MankAsync()
         {
             var resp = await _client.Images.SearchAsync(query: "mank");
+            await ReplyAsync("", false, embed: new EmbedBuilder()
+            {
+                ImageUrl = resp.Value[new Random().Next(0, resp.Value.Count())].ContentUrl
+            }.Build());
+        }
+
+        [Command("hank")]
+        [Summary("that boy ain't right")]
+        public async Task HankAsync()
+        {
+            var resp = await _client.Images.SearchAsync(query: "king of the hill quotes hank");
             await ReplyAsync("", false, embed: new EmbedBuilder()
             {
                 ImageUrl = resp.Value[new Random().Next(0, resp.Value.Count())].ContentUrl
