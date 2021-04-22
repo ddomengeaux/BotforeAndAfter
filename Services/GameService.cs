@@ -42,6 +42,7 @@ namespace BotforeAndAfters.Services
 
         public int TimesPlayed => Games.Query().Where(x => x.Question.Answer == _currentGame.Question.Answer).Count();
         public bool WasWon => _currentGame?.WonBy > 0;
+        public int TimesWon => Games.Query().Where(x => x.Question.Answer == _currentGame.Question.Answer && x.WonBy > 0).Count();
 
         public bool IsActive =>
             !((DateTimeOffset.Now - _currentGame.StartedOn).TotalMinutes >
@@ -74,7 +75,7 @@ namespace BotforeAndAfters.Services
         public async Task StartRoundAsync(ulong id, ulong user, int roundTimer = 3)
         {
             if (!_beforeAndAfters.Any())
-                await UpdateDataSourceAsync();
+                await UpdateDataSourceAsync();  
 
             _roundTimer = roundTimer;
             _currentGame = new BeforeAndAfterGame(id, user, PickQuestion(), _roundTimer);
@@ -84,7 +85,7 @@ namespace BotforeAndAfters.Services
 
         public async Task<bool> CheckAnswerAsync(ulong user, string guess)
         {
-            if (_currentGame == null)
+            if (_currentGame == null || !IsActive)
                 return false;
 
             var result = _currentGame.CheckAnswer(user, guess);
@@ -111,6 +112,9 @@ namespace BotforeAndAfters.Services
 
         public Tuple<bool, TimeSpan> CheckForCooldown(ulong user)
         {
+            if (int.Parse(_config[Keys.COOLDOWN_TIMER]) == 0)
+                return new Tuple<bool, TimeSpan>(false, TimeSpan.Zero);
+
             var latest = Games.Query().Where(x => x.StartedBy == user).OrderByDescending(x => x.StartedOn)
                 .FirstOrDefault();
 

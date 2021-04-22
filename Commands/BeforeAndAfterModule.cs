@@ -47,7 +47,12 @@ namespace BotforeAndAfters.Commands
                     if (!_gameService.IsActive)
                     {
                         if (!_gameService.WasWon)
-                            await ReplyAsync("No winners this round. Let's play again soon!");
+                        {
+                            if (_gameService.TimesPlayed > 3 && _gameService.TimesPlayed > _gameService.TimesWon && _gameService.Guesses >= 3)
+                                await ReplyAsync($"No winners this round. Seems like this is a tough one! ||{_gameService.Answer}||");
+                            else
+                                await ReplyAsync("No winners this round. Let's play again soon!");
+                        }
 
                         timer.Dispose();
                     }
@@ -152,6 +157,7 @@ namespace BotforeAndAfters.Commands
                 Description = _gameService.Question
             }
                 .AddField("Times Played", _gameService.TimesPlayed, true)
+                .AddField("Times Won", _gameService.TimesWon, true)
                 .AddField("Guesses", _gameService.Guesses, true)
                 .AddField("Timer",
                     $"{(_gameService.IsActive ? _gameService.TimeRemaining.ToString("mm\\:ss") : "Finished")}", true);

@@ -9,7 +9,7 @@
     <ItemGroup>
       <PackageReference Include="Discord.Addons.Interactive" Version="2.0.0" />
       <PackageReference Include="Discord.Net" Version="2.3.1" />
-      <PackageReference Include="Google.Apis.Sheets.v4" Version="1.50.0.2245" />
+      <PackageReference Include="Google.Apis.Sheets.v4" Version="1.51.0.2272" />
       <PackageReference Include="LiteDB" Version="5.0.10" />
       <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
       <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
