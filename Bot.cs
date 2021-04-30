@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using BotforeAndAfters.Extensions;
 using BotforeAndAfters.Services;
@@ -9,10 +12,12 @@ using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
 using Discord.WebSocket;
+using Flurl.Http;
 using LiteDB;
 using Microsoft.Bing.ImageSearch;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using Serilog;
 
 namespace BotforeAndAfters
@@ -50,7 +55,7 @@ namespace BotforeAndAfters
             Logger = new LoggerConfiguration()
                 .SetupLogging(_config)
                 .CreateLogger();
-            
+
             Client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 MessageCacheSize = 50,
@@ -91,9 +96,8 @@ namespace BotforeAndAfters
                         return;
 
                     var argPos = 0;
-                    if (!(msg.HasCharPrefix(Constants.CONFIG_DEFAULT_COMMAND_PREFIX, ref argPos) ||
-                          msg.HasMentionPrefix(Client.CurrentUser, ref argPos)) ||
-                        message.Author.IsBot)
+                    if (msg.HasMentionPrefix(Client.CurrentUser, ref argPos) || message.Author.IsBot ||
+                        !msg.HasCharPrefix(Constants.CONFIG_DEFAULT_COMMAND_PREFIX, ref argPos))
                         return;
 
                     var watch = new Stopwatch();
@@ -101,7 +105,7 @@ namespace BotforeAndAfters
 
                     var context = new SocketCommandContext(Client, msg);
                     var result = await CommandService.ExecuteAsync(context, argPos,
-                        Services);
+                            Services);
 
                     watch.Stop();
 

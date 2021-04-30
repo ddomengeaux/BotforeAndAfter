@@ -20,6 +20,16 @@ namespace BotforeAndAfters.Commands
             _logger = services.GetService<ILogger>();
         }
 
+        [Command("rules")]
+        [Summary("Before and Afters: The Bot: The Game: The Rules!")]
+        public async Task RulesAsync()
+        {
+            await ReplyAsync(embed: new EmbedBuilder()
+                        .WithTitle($"Hi {Context.Message.Author.Username}!")
+                        .WithDescription("Use !play to start a new round. Use !guess \"bad movie pun here\" (without the \"\") to make a guess! Punctuation is ignored in the answers, but doesn't account for errors from my creators. Good Luck!")
+                        .Build());
+        }
+
         [Command("play")]
         [Summary("Play a round of Before and Afters!")]
         public async Task PlayAsync()

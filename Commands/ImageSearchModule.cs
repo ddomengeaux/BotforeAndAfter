@@ -28,8 +28,9 @@ namespace BotforeAndAfters.Commands
             var title = "";
 
             var a = new Random().Next(0, 69);
+            var b = new Random().Next(0, 69);
 
-            if (a % 2 == 0)
+            if (a % 2 == 0 && b % 2 == 0)
             {
                 searchString = "Matt Rogers Las Culturistas";
                 title = "The Mank boner was throbbing";

@@ -13,6 +13,10 @@ namespace BotforeAndAfters
         public const string LOG_FILE_LOCATION_KEY = "log_file";
         public const string BING_KEY = "bing_key";
 
+        public const string COGNITIVE_SERVICES_URI_KEY = "cognitiveservices_uri";
+        public const string COGNITIVE_SERVICES_KEY_KEY = "cognitiveservices_key";
+        public const string SENTIMENT_ENDPOINT_KEY = "sentiment_endpoint";
+
         public const string SHEETS_CLIENT_ID_KEY = "sheets_config:client_id";
         public const string SHEETS_CLIENT_SECRET_KEY = "sheets_config:client_secret";
         public const string SHEETS_SHEET_ID = "sheets_config:sheet";
