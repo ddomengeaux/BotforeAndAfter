@@ -135,6 +135,10 @@ namespace BotforeAndAfters.Services
             if (!_beforeAndAfters.Any())
                 await UpdateDataSourceAsync();
 
+            var users = new List<UserStats>();
+
+            //var group = Games.Query().GroupBy("StartedBy").
+
             return new GameStats()
             {
                 Total = _beforeAndAfters.Count(),

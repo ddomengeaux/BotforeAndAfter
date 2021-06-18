@@ -78,6 +78,7 @@ namespace BotforeAndAfters
                 }))
                 .AddSingleton(new LiteDatabase($"{Constants.CONFIG_BOT_NAME}.db"))
                 .AddSingleton<GameService>()
+                .AddSingleton<ComplimentService>()
                 .AddSingleton(new ImageSearchClient(new ApiKeyServiceClientCredentials(_config[Keys.BING_KEY])))
                 .BuildServiceProvider();
 
