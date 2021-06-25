@@ -31,4 +31,5 @@ Create config.json in base directory with options for the bot
 ```
 
 Google Sheets API Docs: https://developers.google.com/sheets/api/quickstart/dotnet
+
 Bing Image Search: https://github.com/microsoft/bing-search-sdk-for-net/tree/main/sdk/ImageSearch
