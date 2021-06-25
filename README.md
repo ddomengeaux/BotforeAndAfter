@@ -4,6 +4,7 @@ Discord Bot for various activities on Kyle Ayer's discord server (http://fart.ky
 
 Create config.json in base directory with options for the bot
 
+```json
 {
   "discord_token": "DISCORDTOKEN",
   "log_file": "logs/bot.log",
@@ -27,6 +28,7 @@ Create config.json in base directory with options for the bot
     "compliments_range": "Sheet1!A1:A1000"
   }
 }
+```
 
 Google Sheets API Docs: https://developers.google.com/sheets/api/quickstart/dotnet
 Bing Image Search: https://github.com/microsoft/bing-search-sdk-for-net/tree/main/sdk/ImageSearch
