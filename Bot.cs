@@ -6,6 +6,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure;
+using Azure.AI.TextAnalytics;
 using BotforeAndAfters.Extensions;
 using BotforeAndAfters.Services;
 using Discord;
@@ -48,6 +50,7 @@ namespace BotforeAndAfters
         public DiscordSocketClient Client { get; private set; }
         public IServiceProvider Services { get; private set; }
         public ILogger Logger { get; private set; }
+        public TextAnalyticsClient AnalyticsClient { get; private set; }
         public CommandService CommandService => Services.GetRequiredService<CommandService>();
 
         public async Task StartAsync()
@@ -62,10 +65,14 @@ namespace BotforeAndAfters
                 LogLevel = LogSeverity.Verbose
             });
 
+            AnalyticsClient = new TextAnalyticsClient(new Uri(_config[Keys.COGNITIVE_SERVICES_URI_KEY]),
+                        new AzureKeyCredential(_config[Keys.COGNITIVE_SERVICES_KEY_KEY]));
+
             Services = new ServiceCollection()
                 .AddSingleton(_config)
                 .AddSingleton(Logger)
                 .AddSingleton(Client)
+                .AddSingleton(AnalyticsClient)
                 .AddSingleton(new InteractiveService(Client, new InteractiveServiceConfig
                 {
                     DefaultTimeout = TimeSpan.FromSeconds(30)
@@ -97,7 +104,23 @@ namespace BotforeAndAfters
                         return;
 
                     var argPos = 0;
-                    if (msg.HasMentionPrefix(Client.CurrentUser, ref argPos) || message.Author.IsBot ||
+
+                    if (msg.HasMentionPrefix(Client.CurrentUser, ref argPos))
+                    {
+                        DocumentSentiment documentSentiment = AnalyticsClient.AnalyzeSentiment(msg.Content);
+                        Console.WriteLine($"Document sentiment: {documentSentiment.Sentiment}\n");
+
+                        foreach (var sentence in documentSentiment.Sentences)
+                        {
+                            Console.WriteLine($"\tText: \"{sentence.Text}\"");
+                            Console.WriteLine($"\tSentence sentiment: {sentence.Sentiment}");
+                            Console.WriteLine($"\tPositive score: {sentence.ConfidenceScores.Positive:0.00}");
+                            Console.WriteLine($"\tNegative score: {sentence.ConfidenceScores.Negative:0.00}");
+                            Console.WriteLine($"\tNeutral score: {sentence.ConfidenceScores.Neutral:0.00}\n");
+                        }
+                    }
+
+                    if (message.Author.IsBot ||
                         !msg.HasCharPrefix(Constants.CONFIG_DEFAULT_COMMAND_PREFIX, ref argPos))
                         return;
 

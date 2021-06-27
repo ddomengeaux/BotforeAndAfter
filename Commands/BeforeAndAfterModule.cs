@@ -58,10 +58,11 @@ namespace BotforeAndAfters.Commands
                     {
                         if (!_gameService.WasWon)
                         {
-                            if (_gameService.TimesPlayed > 3 && _gameService.TimesPlayed > _gameService.TimesWon && _gameService.Guesses >= 3)
-                                await ReplyAsync($"No winners this round. Seems like this is a tough one! ||{_gameService.Answer}||");
-                            else
-                                await ReplyAsync("No winners this round. Let's play again soon!");
+                            //if (_gameService.TimesPlayed > 3 && _gameService.TimesPlayed > _gameService.TimesWon && _gameService.Guesses >= 3)
+                            //    await ReplyAsync($"No winners this round. Seems like this is a tough one! ||{_gameService.Answer}||");
+                            //else
+
+                            await ReplyAsync($"No winners this round. Let's play again soon!, ||{_gameService.Answer}||");
                         }
 
                         timer.Dispose();
