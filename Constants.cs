@@ -24,6 +24,7 @@ namespace BotforeAndAfters
 
         public const string SHEETS_COMPLIMENT_SHEET_ID = "sheets_config:compliments_sheet";
         public const string SHEETS_COMPLIMENT_SHEET_RANGE = "sheets_config:compliments_range";
+        public const string SHEETS_EXCUSE_SHEET_RANGE = "sheets_config:excuse_range";
 
         public const string ROUND_TIMER = "round_timer";
         public const string COOLDOWN_TIMER = "cooldown";

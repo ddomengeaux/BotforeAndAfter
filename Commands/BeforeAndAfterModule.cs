@@ -127,27 +127,6 @@ namespace BotforeAndAfters.Commands
             }
         }
 
-        [Command("stats")]
-        [Summary("Shows some basic stats for the before and after game")]
-        public async Task StatsAsync()
-        {
-            try
-            {
-                var stats = await _gameService.GetStats();
-
-                await ReplyAsync(embed: new EmbedBuilder()
-                    .WithTitle($"Stats")
-                    .AddField("Entries", $"{stats.Total}", true)
-                    .AddField("Played", $"{stats.Played}", true)
-                    .AddField("Won", $"{stats.Won}", true)
-                    .Build());
-            }
-            catch (Exception e)
-            {
-                await LogError(e);
-            }
-        }
-
         private async Task LogError(Exception e)
         {
             _logger.Error(e.Message, e);

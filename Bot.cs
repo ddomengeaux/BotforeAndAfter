@@ -10,6 +10,7 @@ using Azure;
 using Azure.AI.TextAnalytics;
 using BotforeAndAfters.Extensions;
 using BotforeAndAfters.Services;
+using Dice;
 using Discord;
 using Discord.Addons.Interactive;
 using Discord.Commands;
@@ -86,6 +87,7 @@ namespace BotforeAndAfters
                 .AddSingleton(new LiteDatabase($"{Constants.CONFIG_BOT_NAME}.db"))
                 .AddSingleton<GameService>()
                 .AddSingleton<ComplimentService>()
+                .AddSingleton<ExcuseService>()
                 .AddSingleton(new ImageSearchClient(new ApiKeyServiceClientCredentials(_config[Keys.BING_KEY])))
                 .BuildServiceProvider();
 
@@ -100,72 +102,83 @@ namespace BotforeAndAfters
 
                 Client.MessageReceived += async message =>
                 {
-                    if (!(message is SocketUserMessage msg) || !(message.Channel is SocketGuildChannel))
+                    if (message is not SocketUserMessage msg || !(message.Channel is SocketGuildChannel))
                         return;
 
                     var argPos = 0;
-
-                    if (msg.HasMentionPrefix(Client.CurrentUser, ref argPos))
-                    {
-                        DocumentSentiment documentSentiment = AnalyticsClient.AnalyzeSentiment(msg.Content);
-                        Console.WriteLine($"Document sentiment: {documentSentiment.Sentiment}\n");
-
-                        foreach (var sentence in documentSentiment.Sentences)
-                        {
-                            Console.WriteLine($"\tText: \"{sentence.Text}\"");
-                            Console.WriteLine($"\tSentence sentiment: {sentence.Sentiment}");
-                            Console.WriteLine($"\tPositive score: {sentence.ConfidenceScores.Positive:0.00}");
-                            Console.WriteLine($"\tNegative score: {sentence.ConfidenceScores.Negative:0.00}");
-                            Console.WriteLine($"\tNeutral score: {sentence.ConfidenceScores.Neutral:0.00}\n");
-                        }
-                    }
-
-                    if (message.Author.IsBot ||
-                        !msg.HasCharPrefix(Constants.CONFIG_DEFAULT_COMMAND_PREFIX, ref argPos))
+                    if (message.Author.IsBot)
                         return;
-
-                    var watch = new Stopwatch();
-                    watch.Start();
 
                     var context = new SocketCommandContext(Client, msg);
-                    var result = await CommandService.ExecuteAsync(context, argPos,
-                            Services);
 
-                    watch.Stop();
-
-                    if (result.IsSuccess)
+                    if (msg.HasCharPrefix(Constants.CONFIG_DEFAULT_COMMAND_PREFIX, ref argPos))
                     {
-                        Logger.Information("{Content} successfully executed by {Username} in {ElapsedMilliseconds} ms",
-                            msg.Content,
-                            msg.Author.Username,
-                            watch.ElapsedMilliseconds);
+                        var watch = new Stopwatch();
+                        watch.Start();
 
-                        return;
-                    }
+                        var result = await CommandService.ExecuteAsync(context, argPos,
+                                Services);
 
-                    switch (result)
-                    {
-                        case ExecuteResult execute:
-                            Logger.Error(execute.Exception,
-                                "{Content} executed by {Username} failed ({ErrorReason}) in {ElapsedMilliseconds} ms",
+                        watch.Stop();
+
+                        if (result.IsSuccess)
+                        {
+                            Logger.Information("{Content} successfully executed by {Username} in {ElapsedMilliseconds} ms",
                                 msg.Content,
                                 msg.Author.Username,
-                                result.ErrorReason,
                                 watch.ElapsedMilliseconds);
-                            break;
 
-                        default:
-                            Logger.Error(
-                                "{Content} executed by {Username} failed ({ErrorReason}) in {ElapsedMilliseconds} ms",
-                                msg.Content,
-                                msg.Author.Username,
-                                result.ErrorReason,
-                                watch.ElapsedMilliseconds);
-                            break;
+                            return;
+                        }
+
+                        switch (result)
+                        {
+                            case ExecuteResult execute:
+                                Logger.Error(execute.Exception,
+                                    "{Content} executed by {Username} failed ({ErrorReason}) in {ElapsedMilliseconds} ms",
+                                    msg.Content,
+                                    msg.Author.Username,
+                                    result.ErrorReason,
+                                    watch.ElapsedMilliseconds);
+                                break;
+
+                            default:
+                                Logger.Error(
+                                    "{Content} executed by {Username} failed ({ErrorReason}) in {ElapsedMilliseconds} ms",
+                                    msg.Content,
+                                    msg.Author.Username,
+                                    result.ErrorReason,
+                                    watch.ElapsedMilliseconds);
+                                break;
+                        }
+
+                        if (!result.ErrorReason.Equals("Unknown command."))
+                            await context.Channel.SendMessageAsync(result.ErrorReason);
                     }
+                    else if (msg.HasMentionPrefix(Client.CurrentUser, ref argPos))
+                    {
+                        DocumentSentiment documentSentiment = AnalyticsClient.AnalyzeSentiment(msg.Content);
 
-                    if (!result.ErrorReason.Equals("Unknown command."))
-                        await context.Channel.SendMessageAsync(result.ErrorReason);
+                        switch (documentSentiment.Sentiment)
+                        {
+                            case TextSentiment.Neutral:
+                            default:
+                                Logger.Information("Neutral sentiment from {0}", context.Message.Author.Username);
+                                break;
+
+                            case TextSentiment.Positive:
+                                await context.Channel.SendMessageAsync($"Awwww thank you {context.Message.Author.Username}");
+                                break;
+
+                            case TextSentiment.Negative:
+                                await context.Channel.SendMessageAsync($"That's not very nice {context.Message.Author.Username}");
+                                break;
+
+                            case TextSentiment.Mixed:
+                                await context.Channel.SendMessageAsync($"I'm not sure how I feel about that ...");
+                                break;
+                        }
+                    }
                 };
             };
 
