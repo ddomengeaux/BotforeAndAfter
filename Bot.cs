@@ -28,6 +28,7 @@ namespace BotforeAndAfters
     internal class Bot
     {
         private readonly IConfiguration _config;
+        private bool _isLoaded = false;
 
         public Bot(string[] args)
         {
@@ -97,6 +98,9 @@ namespace BotforeAndAfters
             {
                 Logger.Information("Connected as {Username} on {Count} server(s)", Client.CurrentUser.Username,
                     Client.Guilds.Count);
+
+                if (_isLoaded)
+                    return;
 
                 await CommandService.AddModulesAsync(Assembly.GetEntryAssembly(), Services);
 
@@ -180,6 +184,8 @@ namespace BotforeAndAfters
                         }
                     }
                 };
+
+                _isLoaded = true;
             };
 
             await Client.LoginAsync(TokenType.Bot, _config[Keys.DISCORD_TOKEN_KEY]);
