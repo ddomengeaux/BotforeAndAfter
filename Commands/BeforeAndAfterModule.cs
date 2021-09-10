@@ -140,6 +140,12 @@ namespace BotforeAndAfters.Commands
 
             var message = await Context.Channel.GetMessageAsync(_gameService.Id.Value) as IUserMessage;
 
+            if (message == null)
+            {
+                await LogError(new Exception("message was null?"));
+                return;
+            }    
+
             var banner = new EmbedBuilder()
             {
                 Title = "Okay",
