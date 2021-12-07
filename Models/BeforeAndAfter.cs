@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using LiteDB;
 
 namespace BotforeAndAfters.Models
 {
@@ -38,6 +39,7 @@ namespace BotforeAndAfters.Models
         public int Guesses { get; set; }
         public TimeSpan GuessedIn { get; set; }
 
+        [BsonIgnore]
         public bool CheckAnswer(ulong user, string guess)
         {
             Guesses++;
@@ -52,5 +54,14 @@ namespace BotforeAndAfters.Models
 
             return true;
         }
+
+        [BsonIgnore]
+        public bool IsActive =>
+            !((DateTimeOffset.Now - StartedOn).TotalMinutes >
+                3 || WonBy > 0);
+
+        [BsonIgnore]
+        public TimeSpan TimeRemaining =>
+            TimeSpan.FromMinutes(3) - (DateTimeOffset.Now - StartedOn);
     }
 }

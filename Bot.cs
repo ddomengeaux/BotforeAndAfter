@@ -86,7 +86,7 @@ namespace BotforeAndAfters
                     LogLevel = LogSeverity.Verbose
                 }))
                 .AddSingleton(new LiteDatabase($"{Constants.CONFIG_BOT_NAME}.db"))
-                .AddSingleton<GameService>()
+                .AddSingleton<BeforeAndAftersService>()
                 .AddSingleton<ComplimentService>()
                 .AddSingleton<ExcuseService>()
                 .AddSingleton(new ImageSearchClient(new ApiKeyServiceClientCredentials(_config[Keys.BING_KEY])))

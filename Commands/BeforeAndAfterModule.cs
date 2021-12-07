@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Timers;
+using BotforeAndAfters.Models;
 using BotforeAndAfters.Services;
 using Discord;
 using Discord.Commands;
+using LiteDB;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 
@@ -11,13 +14,19 @@ namespace BotforeAndAfters.Commands
 {
     public class BeforeAndAfterModule : ModuleBase<SocketCommandContext>
     {
-        private readonly GameService _gameService;
+        private readonly BeforeAndAftersService _beforeAndAfters;
         private readonly ILogger _logger;
+        private Dictionary<ulong, BeforeAndAfterGame> _currentGames = new Dictionary<ulong, BeforeAndAfterGame>();
+
+        private readonly LiteDatabase _database;
+        private ILiteCollection<BeforeAndAfterGame> _games;
+        private ILiteCollection<BeforeAndAfterGame> Games => _games ??= _database.GetCollection<BeforeAndAfterGame>();
 
         public BeforeAndAfterModule(IServiceProvider services)
         {
-            _gameService = services.GetService<GameService>();
             _logger = services.GetService<ILogger>();
+            _database = services.GetService<LiteDatabase>();
+            _beforeAndAfters = services.GetService<BeforeAndAftersService>();
         }
 
         [Command("rules")]
@@ -36,13 +45,6 @@ namespace BotforeAndAfters.Commands
         {
             try
             {
-                var (hasCooldown, cooldownRemaining) = _gameService.CheckForCooldown(Context.Message.Author.Id);
-                if (hasCooldown)
-                {
-                    await ReplyAsync($"Sorry {Context.Message.Author.Username} you are on cooldown for {cooldownRemaining:mm\\:ss}");
-                    return;
-                }
-
                 var message = await ReplyAsync(embed: new EmbedBuilder()
                 {
                     Color = Color.Blue,
@@ -50,30 +52,18 @@ namespace BotforeAndAfters.Commands
                     Description = "Fetching Game ..."
                 }.Build());
 
-                await _gameService.StartRoundAsync(message.Id, Context.Message.Author.Id);
+                var current = new BeforeAndAfterGame(message.Id, Context.Message.Author.Id, await _beforeAndAfters.GetBeforeAndAfterAsync(), 3);
+                _currentGames.Add(Context.Guild.Id, current);
+
                 var timer = new Timer(10000) { AutoReset = true };
                 timer.Elapsed += async (sender, args) =>
                 {
-                    if (!_gameService.IsActive)
-                    {
-                        if (!_gameService.WasWon)
-                        {
-                            //if (_gameService.TimesPlayed > 3 && _gameService.TimesPlayed > _gameService.TimesWon && _gameService.Guesses >= 3)
-                            //    await ReplyAsync($"No winners this round. Seems like this is a tough one! ||{_gameService.Answer}||");
-                            //else
 
-                            await ReplyAsync($"No winners this round. Let's play again soon!, ||{_gameService.Answer}||");
-                        }
-
-                        timer.Dispose();
-                    }
-
-                    await GenerateBannerAsync();
                 };
                 timer.Start();
 
                 _logger.Information(
-                        $"{Context.Message.Author.Username} started new game {_gameService.Answer}");
+                        $"{Context.Message.Author.Username} [{Context.Guild.Name}] started new game {current.Question.Answer}");
 
                 await GenerateBannerAsync();
             }
@@ -89,14 +79,19 @@ namespace BotforeAndAfters.Commands
         {
             try
             {
-                if (await _gameService.CheckAnswerAsync(Context.Message.Author.Id, guess))
+                var currentGame = _currentGames[Context.Guild.Id];
+
+                if (currentGame == null)
+                    return;
+
+                if (currentGame.CheckAnswer(Context.Message.Author.Id, guess))
                     await ReplyAsync(embed: new EmbedBuilder()
                         .WithTitle($"Congrats {Context.Message.Author.Username}!")
                         .WithDescription("I'm so proud of you")
-                        .AddField("Movies", $"{_gameService.Movies}", true)
-                        .AddField("Episode", $"{_gameService.Episode}", true)
-                        .AddField("Guesses", $"{_gameService.Guesses}", true)
-                        .AddField("Time", $"{_gameService.GuessedIn:mm\\:ss}", true)
+                        .AddField("Movies", $"{currentGame.Question.Movies}", true)
+                        .AddField("Episode", $"{currentGame.Question.Episode}", true)
+                        .AddField("Guesses", $"{currentGame.Guesses}", true)
+                        .AddField("Time", $"{currentGame.GuessedIn:mm\\:ss}", true)
                         .Build());
                 else
                     await Context.Message.AddReactionAsync(new Emoji("❌"));
@@ -119,7 +114,7 @@ namespace BotforeAndAfters.Commands
                     return;
 
                 await ReplyAsync(
-                    $"Updated Before and Afters data. {await _gameService.UpdateDataSourceAsync()} total records.");
+                    $"Updated Before and Afters data. {await _beforeAndAfters.UpdateDataSourceAsync()} total records.");
             }
             catch (Exception e)
             {
@@ -135,30 +130,35 @@ namespace BotforeAndAfters.Commands
 
         private async Task GenerateBannerAsync()
         {
-            if (!_gameService.Id.HasValue)
+            var currentGame = _currentGames[Context.Guild.Id];
+
+            if (currentGame == null)
                 return;
 
-            var message = await Context.Channel.GetMessageAsync(_gameService.Id.Value) as IUserMessage;
+            var message = await Context.Channel.GetMessageAsync(currentGame.Id) as IUserMessage;
 
             if (message == null)
             {
                 await LogError(new Exception("message was null?"));
                 return;
-            }    
+            }
+
+            var timesPlayed = Games.Query().Where(x => x.Question.Answer == currentGame.Question.Answer).Count();
+            var timesWon = Games.Query().Where(x => x.Question.Answer == currentGame.Question.Answer && x.WonBy > 0).Count();
 
             var banner = new EmbedBuilder()
             {
                 Title = "Okay",
                 Color = Color.Blue,
-                Description = _gameService.Question
+                Description = currentGame.Question.Plot
             }
-                .AddField("Times Played", _gameService.TimesPlayed, true)
-                .AddField("Times Won", _gameService.TimesWon, true)
-                .AddField("Guesses", _gameService.Guesses, true)
-                .AddField("Timer",
-                    $"{(_gameService.IsActive ? _gameService.TimeRemaining.ToString("mm\\:ss") : "Finished")}", true);
+                    .AddField("Times Played", timesPlayed, true)
+                    .AddField("Times Won", timesWon, true)
+                    .AddField("Guesses", currentGame.Guesses, true)
+                    .AddField("Timer",
+                        $"{(currentGame.IsActive ? currentGame.TimeRemaining.ToString("mm\\:ss") : "Finished")}", true);
 
-            if (_gameService.IsActive)
+            if (currentGame.IsActive)
             {
                 banner.Footer = new EmbedFooterBuilder()
                 {
