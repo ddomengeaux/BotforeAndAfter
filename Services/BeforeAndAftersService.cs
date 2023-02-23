@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BotforeAndAfters.Extensions;
 using BotforeAndAfters.Models;
@@ -20,12 +21,24 @@ namespace BotforeAndAfters.Services
         private readonly SheetsService _sheetsService;
         private IList<BeforeAndAfter> _beforeAndAfters = new List<BeforeAndAfter>();
 
+        public Dictionary<ulong, BeforeAndAfterGame> CurrentGames = new Dictionary<ulong, BeforeAndAfterGame>();
+
         public BeforeAndAftersService(IServiceProvider services)
         {
             _config = services.GetService<IConfiguration>();
             _database = services.GetService<LiteDatabase>();
             _logger = services.GetService<ILogger>();
             _sheetsService = Configuration.SetupGoogleSheets(_config, _logger).Result;
+        }
+
+        public bool CheckAnswer(ulong guildId, ulong user, string guess)
+        {
+            var res = CurrentGames[guildId].CheckAnswer(user, guess);
+
+            if (res)
+                CurrentGames.Remove(guildId);
+
+            return res;
         }
 
         public async Task<int> UpdateDataSourceAsync()

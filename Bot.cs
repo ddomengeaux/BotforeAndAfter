@@ -64,7 +64,8 @@ namespace BotforeAndAfters
             Client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 MessageCacheSize = 50,
-                LogLevel = LogSeverity.Verbose
+                LogLevel = LogSeverity.Verbose,
+                GatewayIntents = GatewayIntents.MessageContent | GatewayIntents.AllUnprivileged
             });
 
             AnalyticsClient = new TextAnalyticsClient(new Uri(_config[Keys.COGNITIVE_SERVICES_URI_KEY]),
@@ -75,10 +76,10 @@ namespace BotforeAndAfters
                 .AddSingleton(Logger)
                 .AddSingleton(Client)
                 .AddSingleton(AnalyticsClient)
-                .AddSingleton(new InteractiveService(Client, new InteractiveServiceConfig
-                {
-                    DefaultTimeout = TimeSpan.FromSeconds(30)
-                }))
+                //.AddSingleton(new InteractiveService(Client, new InteractiveServiceConfig
+                //{
+                //    DefaultTimeout = TimeSpan.FromSeconds(30)
+                //}))
                 .AddSingleton(new CommandService(new CommandServiceConfig
                 {
                     CaseSensitiveCommands = false,

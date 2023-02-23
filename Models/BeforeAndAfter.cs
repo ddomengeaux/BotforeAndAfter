@@ -35,7 +35,7 @@ namespace BotforeAndAfters.Models
         public DateTimeOffset StartedOn { get; set; }
         public int RoundTimer { get; set; }
         public BeforeAndAfter Question { get; }
-        public ulong WonBy { get; set; }
+        public ulong? WonBy { get; set; }
         public int Guesses { get; set; }
         public TimeSpan GuessedIn { get; set; }
 

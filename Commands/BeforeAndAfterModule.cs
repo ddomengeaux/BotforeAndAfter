@@ -16,7 +16,6 @@ namespace BotforeAndAfters.Commands
     {
         private readonly BeforeAndAftersService _beforeAndAfters;
         private readonly ILogger _logger;
-        private Dictionary<ulong, BeforeAndAfterGame> _currentGames = new Dictionary<ulong, BeforeAndAfterGame>();
 
         private readonly LiteDatabase _database;
         private ILiteCollection<BeforeAndAfterGame> _games;
@@ -53,12 +52,28 @@ namespace BotforeAndAfters.Commands
                 }.Build());
 
                 var current = new BeforeAndAfterGame(message.Id, Context.Message.Author.Id, await _beforeAndAfters.GetBeforeAndAfterAsync(), 3);
-                _currentGames.Add(Context.Guild.Id, current);
+                _beforeAndAfters.CurrentGames.Add(Context.Guild.Id, current);
+
+                Games.Insert(current);
 
                 var timer = new Timer(10000) { AutoReset = true };
                 timer.Elapsed += async (sender, args) =>
                 {
+                    if (!current.IsActive)
+                    {
+                        if (current.WonBy is null)
+                        {
+                            //if (_gameService.TimesPlayed > 3 && _gameService.TimesPlayed > _gameService.TimesWon && _gameService.Guesses >= 3)
+                            //    await ReplyAsync($"No winners this round. Seems like this is a tough one! ||{_gameService.Answer}||");
+                            //else
 
+                            await ReplyAsync($"No winners this round. Let's play again soon!, ||{current.Question.Answer}||");
+                        }
+
+                        timer.Dispose();
+                    }
+
+                    await GenerateBannerAsync();
                 };
                 timer.Start();
 
@@ -79,7 +94,7 @@ namespace BotforeAndAfters.Commands
         {
             try
             {
-                var currentGame = _currentGames[Context.Guild.Id];
+                var currentGame = _beforeAndAfters.CurrentGames[Context.Guild.Id];
 
                 if (currentGame == null)
                     return;
@@ -130,7 +145,10 @@ namespace BotforeAndAfters.Commands
 
         private async Task GenerateBannerAsync()
         {
-            var currentGame = _currentGames[Context.Guild.Id];
+            if (!_beforeAndAfters.CurrentGames.ContainsKey(Context.Guild.Id))
+                return;
+
+            var currentGame = _beforeAndAfters.CurrentGames[Context.Guild.Id];
 
             if (currentGame == null)
                 return;
@@ -167,6 +185,12 @@ namespace BotforeAndAfters.Commands
             }
             else
             {
+                if (_beforeAndAfters.CurrentGames.ContainsKey(Context.Guild.Id))
+                {
+                    Games.Update(_beforeAndAfters.CurrentGames[Context.Guild.Id]);
+                    _beforeAndAfters.CurrentGames.Remove(Context.Guild.Id);
+                }
+
                 banner.Footer = new EmbedFooterBuilder()
                 {
                     Text = "Round Over"
