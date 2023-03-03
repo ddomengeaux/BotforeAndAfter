@@ -34,7 +34,7 @@ namespace BotforeAndAfters.Commands
         {
             await ReplyAsync(embed: new EmbedBuilder()
                         .WithTitle($"Hi {Context.Message.Author.Username}!")
-                        .WithDescription("Use !play to start a new round. Use !guess \"bad movie pun here\" (without the \"\") to make a guess! Punctuation is ignored in the answers, but doesn't account for errors from my creators. Good Luck!")
+                        .WithDescription("Two movies have been smashed together into one movie. Read the smooshed together plot, and guess the smooshed together title. Some examples could be: The Wolf of Wall-E Street, FArgo. \n\nTo start a game use !play. \nTo make a guess use !guess the wolf of wall-e street\n\nA game will last 3 mins and you can guess as many times as you'd like. Punctuation (including spaces) and capitalization do not matter and will be ignored. 'The' at the start of a string will be also be ignored. Basically, are the letters in the correct order.\n\nGood Luck!")
                         .Build());
         }
 
@@ -67,7 +67,7 @@ namespace BotforeAndAfters.Commands
                             //    await ReplyAsync($"No winners this round. Seems like this is a tough one! ||{_gameService.Answer}||");
                             //else
 
-                            await ReplyAsync($"No winners this round. Let's play again soon!, ||{current.Question.Answer}||");
+                            await ReplyAsync($"No winners this round. Let's play again soon! ||{current.Question.Answer}||");
                         }
 
                         timer.Dispose();
@@ -186,7 +186,7 @@ namespace BotforeAndAfters.Commands
             {
                 banner.Footer = new EmbedFooterBuilder()
                 {
-                    Text = "Use !guess to play"
+                    Text = "Use !guess to play or !rules for the rules"
                 };
             }
             else

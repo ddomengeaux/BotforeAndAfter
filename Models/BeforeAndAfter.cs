@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using LiteDB;
 
@@ -15,6 +18,14 @@ namespace BotforeAndAfters.Models
     public class BeforeAndAfterGame
     {
         private readonly Regex _regex = new Regex("[^a-zA-Z0-9]");
+        private readonly Regex _trimRegex = new Regex("(?i)^the +");
+
+        private readonly List<string> _replacements = new List<string>() {
+            "(a stretch I know but I still went for it)",
+            "(blade and blade-runner)",
+            "(alternatively Tetsuo, the Iron Man)",
+            "(hard to say)",
+            "[a Natalie Portmanteau*]"};
 
         public BeforeAndAfterGame()
         {
@@ -43,10 +54,22 @@ namespace BotforeAndAfters.Models
         public bool CheckAnswer(ulong user, string guess)
         {
             Guesses++;
-            var answer = string.Equals(_regex.Replace(guess, ""), _regex.Replace(Question.Answer, ""),
-                StringComparison.CurrentCultureIgnoreCase);
 
-            if (!answer)
+            var answer = Question.Answer;
+
+            foreach (var replace in _replacements)
+            {
+                answer = answer.Replace(replace, "");
+            }
+
+            var g = _trimRegex.Replace(guess, "");
+            var g2 = _regex.Replace(g, "");
+
+            var a = _trimRegex.Replace(answer, "");
+            var a2 = _regex.Replace(a, "");
+
+            if (!string.Equals(g2, a2,
+                StringComparison.CurrentCultureIgnoreCase))
                 return false;
 
             GuessedIn = StartedOn - DateTimeOffset.Now;
