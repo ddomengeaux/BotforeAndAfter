@@ -94,6 +94,12 @@ namespace BotforeAndAfters.Commands
         {
             try
             {
+                if (!_beforeAndAfters.CurrentGames.ContainsKey(Context.Guild.Id))
+                {
+                    await ReplyAsync("No game currently in progress, use !play to start a new round.");
+                    return;
+                }
+
                 var currentGame = _beforeAndAfters.CurrentGames[Context.Guild.Id];
 
                 if (currentGame == null)
@@ -103,8 +109,8 @@ namespace BotforeAndAfters.Commands
                     await ReplyAsync(embed: new EmbedBuilder()
                         .WithTitle($"Congrats {Context.Message.Author.Username}!")
                         .WithDescription("I'm so proud of you")
-                        .AddField("Movies", $"{currentGame.Question.Movies}", true)
-                        .AddField("Episode", $"{currentGame.Question.Episode}", true)
+                        .AddField("Movies", $"{(string.IsNullOrEmpty(currentGame.Question.Movies) ? "not listed" : currentGame.Question.Movies)}", true)
+                        .AddField("Episode", $"{(string.IsNullOrEmpty(currentGame.Question.Episode) ? "not listed" : currentGame.Question.Episode)}", true)
                         .AddField("Guesses", $"{currentGame.Guesses}", true)
                         .AddField("Time", $"{currentGame.GuessedIn:mm\\:ss}", true)
                         .Build());
