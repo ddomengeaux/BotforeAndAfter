@@ -47,15 +47,54 @@ namespace BotforeAndAfters.Services
                 return 0;
 
             var response = await _sheetsService.Spreadsheets.Values.Get(_config[Keys.SHEETS_SHEET_ID], _config[Keys.SHEETS_SHEET_RANGE]).ExecuteAsync();
-            _beforeAndAfters = response.Values.Where(x =>
-                !string.IsNullOrEmpty(x[0].ToString()) || !string.IsNullOrEmpty(x[1].ToString())).Select(x =>
-                new BeforeAndAfter()
+
+            _beforeAndAfters.Clear();
+
+            foreach (var value in response.Values)
+            {
+                if (string.IsNullOrEmpty(value[0].ToString()) || string.IsNullOrEmpty(value[1].ToString()))
+                    continue;
+
+                var entry = new BeforeAndAfter();
+                var i = 0;
+                foreach (var innervalue in value)
                 {
-                    Plot = x[1].ToString(),
-                    Answer = x[0].ToString(),
-                    Movies = x[2].ToString(),
-                    Episode = x[3].ToString()
-                }).ToList();
+                    if (!string.IsNullOrEmpty(innervalue.ToString()))
+                    {
+                        switch (i)
+                        {
+                            case 0:
+                                entry.Answer = innervalue.ToString();
+                                break;
+
+                            case 1:
+                                entry.Plot = innervalue.ToString();
+                                break;
+
+                            case 2:
+                                entry.Movies = innervalue.ToString();
+                                break;
+
+                            case 3:
+                                entry.Episode = innervalue.ToString();
+                                break;
+                        }
+                    }
+
+                    i++;
+                }
+                _beforeAndAfters.Add(entry);
+            }
+
+            //var b = a
+            //    .Select(x =>
+            //    new BeforeAndAfter()
+            //    {
+            //        Plot = x[1].ToString(),
+            //        Answer = x[0].ToString(),
+            //        Movies = x[2].ToString(),
+            //        Episode = x[3].ToString()
+            //    }).ToList();
 
             return _beforeAndAfters.Count();
         }
