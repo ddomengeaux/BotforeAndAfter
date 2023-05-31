@@ -21,6 +21,9 @@ using Microsoft.Bing.ImageSearch;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
+using OpenAI.GPT3.Extensions;
+using OpenAI.GPT3.Interfaces;
+using OpenAI.GPT3.ObjectModels.RequestModels;
 using Serilog;
 
 namespace BotforeAndAfters
@@ -63,6 +66,7 @@ namespace BotforeAndAfters
 
             Client = new DiscordSocketClient(new DiscordSocketConfig
             {
+                AlwaysDownloadUsers = true,
                 MessageCacheSize = 50,
                 LogLevel = LogSeverity.Verbose,
                 GatewayIntents = GatewayIntents.MessageContent | GatewayIntents.AllUnprivileged
@@ -71,7 +75,7 @@ namespace BotforeAndAfters
             AnalyticsClient = new TextAnalyticsClient(new Uri(_config[Keys.COGNITIVE_SERVICES_URI_KEY]),
                         new AzureKeyCredential(_config[Keys.COGNITIVE_SERVICES_KEY_KEY]));
 
-            Services = new ServiceCollection()
+            var serviceCollection = new ServiceCollection()
                 .AddSingleton(_config)
                 .AddSingleton(Logger)
                 .AddSingleton(Client)
@@ -90,8 +94,12 @@ namespace BotforeAndAfters
                 .AddSingleton<BeforeAndAftersService>()
                 .AddSingleton<ComplimentService>()
                 .AddSingleton<ExcuseService>()
-                .AddSingleton(new ImageSearchClient(new ApiKeyServiceClientCredentials(_config[Keys.BING_KEY])))
-                .BuildServiceProvider();
+                .AddSingleton(new ImageSearchClient(new ApiKeyServiceClientCredentials(_config[Keys.BING_KEY])));
+
+            serviceCollection
+                .AddOpenAIService(s => { s.ApiKey = _config[Keys.OPENAI_API]; s.Organization = _config[Keys.OPENAI_ORG]; });
+
+            Services = serviceCollection.BuildServiceProvider();
 
             Client.Log += OnLog;
             CommandService.Log += OnLog;
@@ -162,26 +170,59 @@ namespace BotforeAndAfters
                     }
                     else if (msg.HasMentionPrefix(Client.CurrentUser, ref argPos))
                     {
-                        DocumentSentiment documentSentiment = AnalyticsClient.AnalyzeSentiment(msg.Content);
+                        //DocumentSentiment documentSentiment = AnalyticsClient.AnalyzeSentiment(msg.Content);
 
-                        switch (documentSentiment.Sentiment)
+                        //switch (documentSentiment.Sentiment)
+                        //{
+                        //    case TextSentiment.Neutral:
+                        //    default:
+                        //        Logger.Information("Neutral sentiment from {0}", context.Message.Author.Username);
+                        //        break;
+
+                        //    case TextSentiment.Positive:
+                        //        await context.Channel.SendMessageAsync($"Awwww thank you {context.Message.Author.Username}");
+                        //        break;
+
+                        //    case TextSentiment.Negative:
+                        //        await context.Channel.SendMessageAsync($"That's not very nice {context.Message.Author.Username}");
+                        //        break;
+
+                        //    case TextSentiment.Mixed:
+                        //        await context.Channel.SendMessageAsync($"I'm not sure how I feel about that ...");
+                        //        break;
+                        //}
+
+                        if (!bool.Parse(_config[Keys.OPENAI_ENABLED]))
+                            await context.Channel.SendMessageAsync($"Sorry {msg.Author.Username}, but that is disabled right now! Try again some other time.");
+                        else
                         {
-                            case TextSentiment.Neutral:
-                            default:
-                                Logger.Information("Neutral sentiment from {0}", context.Message.Author.Username);
-                                break;
+                            try
+                            {
+                                var result = await Services.GetRequiredService<IOpenAIService>()
+                                                .ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest()
+                                                {
+                                                    Messages = new List<ChatMessage>()
+                                                    {
+                                                        ChatMessage.FromUser(msg.Content)
+                                                    },
+                                                    Model = OpenAI.GPT3.ObjectModels.Models.ChatGpt3_5Turbo0301,
+                                                    MaxTokens = int.Parse(_config[Keys.OPENAI_TOKEN_LENGTH])
+                                                });
 
-                            case TextSentiment.Positive:
-                                await context.Channel.SendMessageAsync($"Awwww thank you {context.Message.Author.Username}");
-                                break;
-
-                            case TextSentiment.Negative:
-                                await context.Channel.SendMessageAsync($"That's not very nice {context.Message.Author.Username}");
-                                break;
-
-                            case TextSentiment.Mixed:
-                                await context.Channel.SendMessageAsync($"I'm not sure how I feel about that ...");
-                                break;
+                                if (result.Successful)
+                                    await context.Channel.SendMessageAsync(result.Choices.FirstOrDefault()?.Message.Content);
+                                else
+                                {
+                                    if (result.Error == null)
+                                        Console.WriteLine("unknown error");
+                                    else
+                                        Console.WriteLine($"{result.Error.Code}: {result.Error.Message}");
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine($"{e.Message}");
+                            }
                         }
                     }
                 };

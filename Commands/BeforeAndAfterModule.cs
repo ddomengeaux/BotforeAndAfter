@@ -44,6 +44,12 @@ namespace BotforeAndAfters.Commands
         {
             try
             {
+                if (_beforeAndAfters.CurrentGames.ContainsKey(Context.Guild.Id))
+                {
+                    await ReplyAsync($"There is already a game in progress! Use !guess to start playing. ");
+                    return;
+                }
+
                 var message = await ReplyAsync(embed: new EmbedBuilder()
                 {
                     Color = Color.Blue,

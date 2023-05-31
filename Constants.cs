@@ -28,5 +28,10 @@ namespace BotforeAndAfters
 
         public const string ROUND_TIMER = "round_timer";
         public const string COOLDOWN_TIMER = "cooldown";
+
+        public const string OPENAI_ENABLED = "openai:enabled";
+        public const string OPENAI_API = "openai:key";
+        public const string OPENAI_ORG = "openai:org";
+        public const string OPENAI_TOKEN_LENGTH = "openai:token_length";
     }
 }
