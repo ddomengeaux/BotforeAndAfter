@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using BotforeAndAfters.Services;
@@ -46,7 +47,7 @@ namespace BotforeAndAfters.Extensions
                         new[] {SheetsService.ScopeConstants.SpreadsheetsReadonly},
                         Constants.CONFIG_BOT_NAME,
                         CancellationToken.None,
-                        new FileDataStore("token", true)),
+                        new FileDataStore(Path.Combine(AppContext.BaseDirectory, "config", "token"), true)),
                     ApplicationName = Constants.CONFIG_BOT_NAME
                 });
             }

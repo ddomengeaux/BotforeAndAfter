@@ -38,7 +38,7 @@ namespace BotforeAndAfters
             try
             {
                 _config = new ConfigurationBuilder()
-                    .SetBasePath(AppContext.BaseDirectory)
+                    .SetBasePath(Path.Combine(AppContext.BaseDirectory, "config"))
                     .AddJsonFile(Constants.CONFIG_FILENAME, true)
                     .AddCommandLine(args).Build();
 
@@ -90,7 +90,7 @@ namespace BotforeAndAfters
                     IgnoreExtraArgs = false,
                     LogLevel = LogSeverity.Verbose
                 }))
-                .AddSingleton(new LiteDatabase($"{Constants.CONFIG_BOT_NAME}.db"))
+                .AddSingleton(new LiteDatabase($"{Path.Combine(AppContext.BaseDirectory, "config", Constants.CONFIG_BOT_NAME)}.db"))
                 .AddSingleton<BeforeAndAftersService>()
                 .AddSingleton<ComplimentService>()
                 .AddSingleton<ExcuseService>()
