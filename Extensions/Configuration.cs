@@ -36,8 +36,6 @@ namespace BotforeAndAfters.Extensions
 
             try
             {
-                var path = Path.Combine(AppContext.BaseDirectory, "config", "token");
-                Console.WriteLine(path);
                 return new SheetsService(new BaseClientService.Initializer
                 {
                     HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync(
@@ -49,7 +47,7 @@ namespace BotforeAndAfters.Extensions
                         new[] {SheetsService.ScopeConstants.SpreadsheetsReadonly},
                         Constants.CONFIG_BOT_NAME,
                         CancellationToken.None,
-                        new FileDataStore(path, true)),
+                        new FileDataStore(Path.Combine(AppContext.BaseDirectory, "config", "token"), true)),
                     ApplicationName = Constants.CONFIG_BOT_NAME
                 });
             }
